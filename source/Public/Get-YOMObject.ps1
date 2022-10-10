@@ -55,7 +55,8 @@ function Get-YOMObject
         }
     }
 
-    process {
+    process
+    {
         foreach ($objectDefinition in $Definition)
         {
             if ($DefaultType)

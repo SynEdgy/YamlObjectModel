@@ -12,12 +12,12 @@ class YOMBase : IYamlConvertible
     [YamlIgnoreAttribute()]
     hidden [OrderedDictionary] $spec
 
-    YOMBaseObject()
+    YOMBase()
     {
         # empty ctor
     }
 
-    YOMBaseObject([IDictionary]$RawSpec)
+    YOMBase([IDictionary]$RawSpec)
     {
         $this.ResolveSpec($RawSpec)
     }
@@ -59,13 +59,13 @@ class YOMBase : IYamlConvertible
     {
         $outerObject = [ordered]@{
             kind = $this.GetType().ToString() # Problem here is that we don't know which module it's coming from...
-            specs = [ordered]@{}
+            spec = [ordered]@{}
         }
 
         $this.PSObject.Properties.Where({
             $_.Name -in $this.GetType().GetProperties().Where{$_.CustomAttributes.AttributeType -ne [YamlDotNet.Serialization.YamlIgnoreAttribute]}.name -and
             $true -eq $_.IsSettable}).Foreach{
-            $outerObject.specs.Add($_.Name,$_.Value)
+            $outerObject.spec.Add($_.Name,$_.Value)
         }
 
         $NestedObjectSerializer.Invoke($outerObject)
@@ -79,39 +79,42 @@ class YOMBase : IYamlConvertible
 
     hidden [void] ResolveSpec([IDictionary] $RawSpec)
     {
-        if ($RawSpec -isnot [OrderedDictionary] -and $RawSpec -as [hashtable])
+        if (-not [string]::IsNullOrEmpty($RawSpec.kind))
         {
-            $RawSpec = ([ordered]@{} + $RawSpec)
-        }
-        elseif ($RawSpec -is [OrderedDictionary])
-        {
-            Write-Debug -Message "Rawspec is an Ordered Dictionary. No Conversion needed."
+            $this.ResolveSpec($RawSpec.kind,$RawSpec.Spec)
         }
         else
         {
-            $this.Spec = [ordered]@{}
-            throw "Error trying to build the object defined by:`n $($RawSpec | ConvertTo-Yaml -Options EmitDefaults)"
-        }
-
-        $this.Spec = [Ordered]@{}
-
-        foreach ($keyInSpec in $RawSpec.Keys)
-        {
-            Write-Debug -Message "Testing value of [$keyInSpec] for object definition..."
-            $ValueForSpec = if ([YOMApiDispatcher]::IsDefinition($RawSpec.($keyInSpec)))
+            if (-not [string]::IsNullOrEmpty($this.kind))
             {
-                # value is a nested object definition
-                Write-Debug -Message "Resolving value as an object."
-                [YOMApiDispatcher]::DispatchSpec($RawSpec.($keyInSpec))
-            }
-            else #TODO: make sure you have an elseif() when the object is a 'shorthand' of an object (handler or object)
-            {
-                # Value is not a hash with kind, return as-is
-                Write-Debug -Message "The Value is --->$($RawSpec.($keyInSpec))"
-                $RawSpec.($keyInSpec)
+                $this.kind = $RawSpec.kind
             }
 
-            $this.Spec.Add($keyInSpec,$ValueForSpec)
+            $this.Spec = [Ordered]@{}
+
+            foreach ($keyInSpec in $RawSpec.Keys)
+            {
+                Write-Debug -Message "Testing value of [$keyInSpec] for object definition..."
+                $ValueForSpec = if ([YOMApiDispatcher]::IsDefinition($RawSpec.($keyInSpec)))
+                {
+                    # value is a nested object definition
+                    Write-Debug -Message "Resolving value as an object."
+                    [YOMApiDispatcher]::DispatchSpec($RawSpec.($keyInSpec))
+                }
+                else #TODO: make sure you have an elseif() when the object is a 'shorthand' of an object (handler or object)
+                {
+                    # Value is not a hash with kind, return as-is
+                    Write-Debug -Message "The Value is --->$($RawSpec.($keyInSpec))"
+                    $RawSpec.($keyInSpec)
+                }
+
+                $this.Spec.Add($keyInSpec,$ValueForSpec)
+                if ($this.PSObject.Properties.Item($keyInSpec).issettable)
+                {
+                    $this.($keyInSpec) = $RawSpec.($keyInSpec)
+                }
+            }
+
         }
     }
 

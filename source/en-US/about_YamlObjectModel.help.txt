@@ -2,13 +2,40 @@ TOPIC
     about_YamlObjectModel
 
 SHORT DESCRIPTION
-    Creates common object model for Yaml de/serialization.
+    Creates a common object model for Yaml de/serialization.
 
 LONG DESCRIPTION
-    {{ Add Long description here }}
+    YamlObjectModel (YOM) is an opinionated module offering an approach for PowerShell custom classes
+    to implement serialization, deserialization, saving to a file, or reloading from a file.
+    Each object is serialized with a kind and its spec (inspired from k8s), with the kind defining the
+    type of the object, and the spec the properties needed.
 
 EXAMPLES
-    PS C:\> {{ add examples here }}
+    PS C:\> using module YamlObjectModel
+    class MyClass : YOMSaveableBase
+    {
+        [string] $MyString
+        MyClass()
+        {
+            # default ctor
+        }
+
+        MyClass([IDictionary]$RawSpec)
+        {
+            $this.ResolveSpec($RawSpec)
+        }
+    }
+
+    $a = [MyClass]@{MyString = 'some value'}
+    $a.SaveTo('./myObj.yml')
+    $a.Reload() # reload the properties from the file in case they have changed from the file
+    $a.MyString = 'other value'
+    $a.Save() # Save the changed property to the file ./myObj.yml
+    $a.ToString() # Displays the yaml representation of this object
+    [YOMApiDispatcher]::DispatchSpec(($a.ToString() | ConvertFrom-Yaml -ordered))
+    # returns an instance of [MyClass] with the right properties
+    Get-YomObject -Path './myObj.yml' loads the object from the file.
+
 
 NOTE:
     Thank you to all those who contributed to this module, by writing code, sharing opinions, and provided feedback.
@@ -17,8 +44,7 @@ TROUBLESHOOTING NOTE:
     Look out on the Github repository for issues and new releases.
 
 SEE ALSO
-  - {{ Please add Project URI such as github }}}
+  - https://github.com/cloudbase/powershell-yaml
 
 KEYWORDS
-      {{ Add coma separated keywords here }}
-
+      Yaml, object, serialization

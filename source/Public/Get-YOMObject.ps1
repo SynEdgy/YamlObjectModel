@@ -1,4 +1,4 @@
-function Get-YOMObjectFromDefinition
+function Get-YOMObject
 {
     [CmdletBinding(DefaultParameterSetName= 'ByPath')]
     param (
@@ -6,7 +6,6 @@ function Get-YOMObjectFromDefinition
         [ValidateNotNullOrEmpty()]
         [string[]]
         $Path,
-
 
         [Parameter(ParameterSetName = 'ByDictionary', Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
         [ValidateNotNullOrEmpty()]
@@ -28,16 +27,30 @@ function Get-YOMObjectFromDefinition
                 $files = if (Test-Path -Path $pathItem -PathType Container)
                 {
                     #TODO: Handle new defaults on subdirectories if defined
-                    Get-ChildItem -Path $pathItem -File -Include *.yml -Recurse
+                    (Get-ChildItem -Path $pathItem -File -Include *.yml -Recurse).FullName
                 }
-                else {
-                    $pathItem
+                else
+                {
+                    Get-YOMAbsolutePath -Path $pathItem
                 }
 
-                $files.foreach{
+                $files.foreach({
+                    $fileItem = $_
                     #TODO: Each file is a container representing objects
-                    Get-Content -Raw -Path $_ | ConvertFrom-Yaml -AllDocuments -Ordered
-                }
+                    (Get-Content -Raw -Path $_ |
+                      ConvertFrom-Yaml -AllDocuments -Ordered).Foreach{
+                        if ([string]::IsNullOrEmpty($_.kind))
+                        {
+                            $_['SavedAtPath'] = $fileItem
+                        }
+                        else
+                        {
+                            $_['spec']['SavedAtPath'] = $fileItem
+                        }
+
+                        $_ #returning definition dans $Definition
+                      }
+                })
             }
         }
     }

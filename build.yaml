@@ -3,9 +3,10 @@
 #          ModuleBuilder Configuration             #
 ####################################################
 
+BuiltModuleSubdirectory: module
 CopyPaths:
   - en-US
-  - DSCResources
+  # - DSCResources
   # - Modules
 Encoding: UTF8
 # Can be used to manually specify module's semantic version if the preferred method of
@@ -20,12 +21,12 @@ VersionedOutputDirectory: true
 #      ModuleBuilder Submodules Configuration      #
 ####################################################
 
-NestedModule:
-    DscResource.Common:
-      CopyOnly: true
-      Path: ./output/RequiredModules/DscResource.Common
-      AddToManifest: false
-      Exclude: PSGetModuleInfo.xml
+# NestedModule:
+#     DscResource.Common:
+#       CopyOnly: true
+#       Path: ./output/RequiredModules/DscResource.Common
+#       AddToManifest: false
+#       Exclude: PSGetModuleInfo.xml
 
 ####################################################
 #       Sampler Pipeline Configuration             #
@@ -55,7 +56,7 @@ BuildWorkflow:
     - Pester_Tests_Stop_On_Fail
     # Use this task if pipeline uses code coverage and the module is using the
     # pattern of Public, Private, Enum, Classes.
-    #- Convert_Pester_Coverage
+    - Convert_Pester_Coverage
     - Pester_if_Code_Coverage_Under_Threshold
 
   # Use this task when you have multiple parallel tests, which produce multiple
@@ -86,7 +87,7 @@ Pester:
   Script:
     - tests/Unit
   Tag:
-  CodeCoverageThreshold: 85 # Set to 0 to bypass
+  CodeCoverageThreshold: 92 # Set to 0 to bypass
   CodeCoverageOutputFile: JaCoCo_coverage.xml
   CodeCoverageOutputFileEncoding: ascii
   # Use this if code coverage should be merged from several pipeline test jobs.
@@ -152,4 +153,3 @@ DscResource.DocGenerator:
       - '_(.+?)_' # Match Italic (underscore)
       - '\*\*(.+?)\*\*' # Match bold
       - '\*(.+?)\*' # Match Italic (asterisk)
-

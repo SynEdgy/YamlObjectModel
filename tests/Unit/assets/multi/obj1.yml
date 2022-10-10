@@ -1,0 +1,6 @@
+kind: YOMOther
+spec:
+  Test:
+    kind: YOMTest
+    spec:
+      Stuff: obj1

@@ -8,27 +8,9 @@ class YOMApiDispatcher
     [string] $Spec
     [OrderedDictionary] $Metadata = [ordered]@{}
 
-    YOMApiDispatcher()
+    static [bool] IsDefinition([object] $Object) # Testing any object whether it's a definition
     {
-        # empty ctor
-    }
-
-    # Constructor currently not used, static method preferred
-    YOMApiDispatcher([OrderedDictionary] $ApiDefinition)
-    {
-        $this.ApiVersion = $ApiDefinition.ApiVersion
-        $this.Kind = $ApiDefinition.Kind
-        $this.Spec = $ApiDefinition.Spec
-
-        # Everything not ApiVersion/Kind/Spec is considered metadata
-        $ApiDefinition.keys.Where{$_ -notin @('ApiVersion','Kind','Spec') }.foreach{
-            $this.Metadata.Add($_, $ApiDefinition[$_])
-        }
-    }
-
-    static [bool] IsDefinition([Object] $OrderedDictionary)
-    {
-        if ($OrderedDictionary -is [OrderedDictionary] -and $OrderedDictionary.Contains('kind'))
+        if ($Object -is [IDictionary] -and $Object.Contains('kind'))
         {
             return $true
         }
@@ -61,13 +43,13 @@ class YOMApiDispatcher
     {
         $moduleString = ''
         $returnCode = ''
-        $Action = ''
+        $action = ''
 
         if ($Definition.Kind -match '\\')
         {
-            $moduleName, $Action = $Definition.Kind.Split('\', 2)
+            $moduleName, $action = $Definition.Kind.Split('\', 2)
             Write-Debug -Message "Module is '$moduleName'"
-            if ($Action -match '\-')
+            if ($action -match '\-')
             {
                 $moduleString = "Import-Module $moduleName"
             }
@@ -78,29 +60,30 @@ class YOMApiDispatcher
         }
         else
         {
-            $Action = $Definition.Kind
+            $action = $Definition.Kind
         }
 
-        if ($Action -match '\-')
+        if ($action -match '\-')
         {
             # Function
-            $functionName = $Action
+            $functionName = $action
             Write-Debug -Message "Calling funcion $functionName"
             $returnCode = "`$params = `$Args[0]`r`n ,($functionName @params)"
         }
-        elseif ($Action -match '::')
+        elseif ($action -match '::')
         {
             # Static Method [class]::Method($spec)
-            $className, $StaticMethod = $Action.Split('::', 2)
+            $className, $StaticMethod = $action.Split('::', 2)
             $StaticMethod = $StaticMethod.Trim('\(\):')
+            $className = $className.Trim('\[\]')
             Write-Debug -Message "Calling static method '[$className]::$StaticMethod(`$spec)'"
             $returnCode = "return [$className]::$StaticMethod(`$args[0])"
         }
         else
         {
             # [Class]::New()
-            $className = $Action
-            Write-Debug -Message "Creating new [$className]"
+            $className = $action
+            Write-Debug -Message ('Creating new [{0}]' -f $className)
             $returnCode = "return [$className]::new(`$args[0])"
         }
 

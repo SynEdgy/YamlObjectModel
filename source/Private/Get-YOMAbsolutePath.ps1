@@ -26,11 +26,11 @@
         being pre-pended to $Path.
 
     .EXAMPLE
-        Get-DictumAbsolutePath -Path '/src' -RelativeTo 'C:\Windows'
+        Get-YOMAbsolutePath -Path '/src' -RelativeTo 'C:\Windows'
         # C:\src
 
     .EXAMPLE
-        Get-DictumAbsolutePath -Path 'MySubFolder' -RelativeTo '/src'
+        Get-YOMAbsolutePath -Path 'MySubFolder' -RelativeTo '/src'
         # C:\src\MySubFolder
 
     .NOTES

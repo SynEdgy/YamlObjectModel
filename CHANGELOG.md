@@ -7,25 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- For new features.
-
-### Changed
-
-- For changes in existing functionality.
-
-### Deprecated
-
-- For soon-to-be removed features.
-
-### Removed
-
-- For now removed features.
-
-### Fixed
-
-- For any bug fix.
+- Base class
+- Saveable Base class (supports Save(), LoadFromFile(), Reload() methods)
+- YOMApiDispatcher and its DispatchSpec() static method
+- Get-YOMObject to have a function to interact with the static method
+- Added tests
 
 ### Security
 
-- In case of vulnerabilities.
-
+- In case of vulnerabilities please report them to contact {at} synedgy.com.

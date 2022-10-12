@@ -155,7 +155,7 @@ GitHubConfig:
   GitHubConfigUserName: dscbot
   GitHubConfigUserEmail: dsccommunity@outlook.com
   UpdateChangelogOnPrerelease: false
-  PublicRepo: https://github.com/synedgy/YamlObjectModel.git
+  PublicRepo: https://github.com/SynEdgy/YamlObjectModel.git
 ####################################################
 #      DscResource.DocGenerator Configuration      #
 ####################################################

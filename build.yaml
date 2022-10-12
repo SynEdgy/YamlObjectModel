@@ -61,8 +61,8 @@ BuildWorkflow:
 
   # Use this task when you have multiple parallel tests, which produce multiple
   # code coverage files and needs to get merged into one file.
-  #merge:
-    #- Merge_CodeCoverage_Files
+  merge:
+    - Merge_CodeCoverage_Files
 
   publish:
     - publish_module_to_gallery
@@ -88,7 +88,7 @@ Pester:
     - tests/Unit
   Tag:
   CodeCoverageThreshold: 92 # Set to 0 to bypass
-  CodeCoverageOutputFile: JaCoCo_coverage.xml
+  CodeCoverageOutputFile: CodeCoverage.xml
   CodeCoverageOutputFileEncoding: ascii
   # Use this if code coverage should be merged from several pipeline test jobs.
   # Any existing keys above should be replaced.
@@ -97,9 +97,11 @@ Pester:
   # after the file specified in CodeCoverageOutputFile.
   # CodeCoverageMergedOutputFile - the file that is created by the merge build task and
   # is the file that should be uploaded to code coverage services.
-  #CodeCoverageOutputFile: JaCoCo_Merge.xml
-  #CodeCoverageMergedOutputFile: JaCoCo_coverage.xml
-  #CodeCoverageFilePattern: JaCoCo_Merge.xml
+  # CodeCoverageOutputFile: JaCoCo_Merge.xml
+
+CodeCoverage:
+  CodeCoverageMergedOutputFile: CodeCov_Merged.xml
+  CodeCoverageFilePattern: Codecov*.xml
 
 
 DscTest:
@@ -153,7 +155,7 @@ GitHubConfig:
   GitHubConfigUserName: dscbot
   GitHubConfigUserEmail: dsccommunity@outlook.com
   UpdateChangelogOnPrerelease: false
-  PublicRepo: https://github.com/synedgy/YamlObjectModel.git
+  PublicRepo: https://github.com/SynEdgy/YamlObjectModel.git
 ####################################################
 #      DscResource.DocGenerator Configuration      #
 ####################################################

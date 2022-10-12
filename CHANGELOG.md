@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - YOMApiDispatcher and its DispatchSpec() static method
 - Get-YOMObject to have a function to interact with the static method
 - Added tests
+- Updated pipeline config
 
 ### Security
 

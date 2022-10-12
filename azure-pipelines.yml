@@ -115,52 +115,17 @@ stages:
             displayName: 'Publish Test Artifact'
             inputs:
               targetPath: '$(buildFolderName)/$(testResultFolderName)/'
-              artifactName: $(testArtifactName)
+              #artifactName: $(testArtifactName)
               # If several pipeline jobs are generating code coverage, replace above with this:
-              #artifactName: 'CodeCoverageWindows' # Can be any, in the pipeline, unique name
+              artifactName: 'CodeCoverageWindows' # Can be any, in the pipeline, unique name
               parallel: true
 
       # If several pipeline jobs should run unit tests, uncomment this:
-      ## If several pipeline jobs are generating test result consider renaming this:
-      #- job: Test_Unit_Linux
-      #  displayName: 'Unit Linux'
-      #  pool:
-      #    vmImage: 'ubuntu-latest'
-      #  timeoutInMinutes: 0
-      #  steps:
-      #    - task: DownloadPipelineArtifact@2
-      #      displayName: 'Download Build Artifact'
-      #      inputs:
-      #        buildType: 'current'
-      #        artifactName: $(buildArtifactName)
-      #        targetPath: '$(Build.SourcesDirectory)/$(buildFolderName)'
-      #    - task: PowerShell@2
-      #      name: test
-      #      displayName: 'Run Unit Test'
-      #      inputs:
-      #        filePath: './build.ps1'
-      #        arguments: "-Tasks test -PesterScript 'tests/Unit'"
-      #        pwsh: true
-      #    - task: PublishTestResults@2
-      #      displayName: 'Publish Test Results'
-      #      condition: succeededOrFailed()
-      #      inputs:
-      #        testResultsFormat: 'NUnit'
-      #        testResultsFiles: '$(buildFolderName)/$(testResultFolderName)/NUnit*.xml'
-      #        # If several pipeline jobs are generating test result consider renaming this:
-      #        testRunTitle: 'Unit Linux'
-      #    - task: PublishPipelineArtifact@1
-      #      displayName: 'Publish Test Artifact'
-      #      inputs:
-      #        targetPath: '$(buildFolderName)/$(testResultFolderName)/'
-      #        # If several pipeline jobs are generating code coverage, consider renaming this:
-      #        artifactName: 'CodeCoverageLinux' # Can be any, in the pipeline, unique name
-      #        parallel: true
-
-      - job: Test_Integration
-        displayName: 'Integration'
+      # If several pipeline jobs are generating test result consider renaming this:
+      - job: Test_Unit_Linux
+        displayName: 'Unit Linux'
         pool:
-          vmImage: 'windows-latest'
+          vmImage: 'ubuntu-latest'
         timeoutInMinutes: 0
         steps:
           - task: DownloadPipelineArtifact@2
@@ -170,26 +135,61 @@ stages:
               artifactName: $(buildArtifactName)
               targetPath: '$(Build.SourcesDirectory)/$(buildFolderName)'
           - task: PowerShell@2
-            name: configureWinRM
-            displayName: 'Configure WinRM'
-            inputs:
-              targetType: 'inline'
-              script: 'winrm quickconfig -quiet'
-              pwsh: false
-          - task: PowerShell@2
             name: test
-            displayName: 'Run Integration Test'
+            displayName: 'Run Unit Test'
             inputs:
               filePath: './build.ps1'
-              arguments: "-Tasks test -CodeCoverageThreshold 0 -PesterScript 'tests/Integration'"
-              pwsh: false
+              arguments: "-Tasks test -PesterScript 'tests/Unit'"
+              pwsh: true
           - task: PublishTestResults@2
             displayName: 'Publish Test Results'
             condition: succeededOrFailed()
             inputs:
               testResultsFormat: 'NUnit'
               testResultsFiles: '$(buildFolderName)/$(testResultFolderName)/NUnit*.xml'
-              testRunTitle: 'Integration'
+              # If several pipeline jobs are generating test result consider renaming this:
+              testRunTitle: 'Unit Linux'
+          - task: PublishPipelineArtifact@1
+            displayName: 'Publish Test Artifact'
+            inputs:
+              targetPath: '$(buildFolderName)/$(testResultFolderName)/'
+              # If several pipeline jobs are generating code coverage, consider renaming this:
+              artifactName: 'CodeCoverageLinux' # Can be any, in the pipeline, unique name
+              parallel: true
+
+      # - job: Test_Integration
+      #   displayName: 'Integration'
+      #   pool:
+      #     vmImage: 'windows-latest'
+      #   timeoutInMinutes: 0
+      #   steps:
+      #     - task: DownloadPipelineArtifact@2
+      #       displayName: 'Download Build Artifact'
+      #       inputs:
+      #         buildType: 'current'
+      #         artifactName: $(buildArtifactName)
+      #         targetPath: '$(Build.SourcesDirectory)/$(buildFolderName)'
+      #     - task: PowerShell@2
+      #       name: configureWinRM
+      #       displayName: 'Configure WinRM'
+      #       inputs:
+      #         targetType: 'inline'
+      #         script: 'winrm quickconfig -quiet'
+      #         pwsh: false
+      #     - task: PowerShell@2
+      #       name: test
+      #       displayName: 'Run Integration Test'
+      #       inputs:
+      #         filePath: './build.ps1'
+      #         arguments: "-Tasks test -CodeCoverageThreshold 0 -PesterScript 'tests/Integration'"
+      #         pwsh: false
+      #     - task: PublishTestResults@2
+      #       displayName: 'Publish Test Results'
+      #       condition: succeededOrFailed()
+      #       inputs:
+      #         testResultsFormat: 'NUnit'
+      #         testResultsFiles: '$(buildFolderName)/$(testResultFolderName)/NUnit*.xml'
+      #         testRunTitle: 'Integration'
 
       - job: Code_Coverage
         displayName: 'Publish Code Coverage'
@@ -216,30 +216,30 @@ stages:
             inputs:
               buildType: 'current'
               # If several pipeline jobs are generating code coverage, set the correct artifact name:
-              artifactName: $(testArtifactName)
-              targetPath: '$(Build.SourcesDirectory)/$(buildFolderName)/$(testResultFolderName)'
+              artifactName: 'CodeCoverageWindows'
+              targetPath: '$(Build.SourcesDirectory)/$(buildFolderName)/$(testResultFolderName)/CodeCoverageWindows'
           # If several pipeline jobs are generating code coverage, uncomment these tasks:
-          #- task: DownloadPipelineArtifact@2
-          #  displayName: 'Download Test Artifact Linux'
-          #  inputs:
-          #    buildType: 'current'
-          #    artifactName: 'CodeCoverageLinux'
-          #    targetPath: '$(Build.SourcesDirectory)/$(buildFolderName)/$(testResultFolderName)'
-          #- task: PowerShell@2 # Merges the code coverage files.
-          #  name: merge
-          #  displayName: 'Merge Code Coverage files'
-          #  inputs:
-          #    filePath: './build.ps1'
-          #    arguments: '-tasks merge'
-          #    pwsh: true
+          - task: DownloadPipelineArtifact@2
+            displayName: 'Download Test Artifact Linux'
+            inputs:
+              buildType: 'current'
+              artifactName: 'CodeCoverageLinux'
+              targetPath: '$(Build.SourcesDirectory)/$(buildFolderName)/$(testResultFolderName)/CodeCoverageLinux'
+          - task: PowerShell@2 # Merges the code coverage files.
+            name: merge
+            displayName: 'Merge Code Coverage files'
+            inputs:
+              filePath: './build.ps1'
+              arguments: '-tasks merge'
+              pwsh: true
           - task: PublishCodeCoverageResults@1
             displayName: 'Publish Code Coverage to Azure DevOps'
             inputs:
               codeCoverageTool: 'JaCoCo'
-              summaryFileLocation: '$(Build.SourcesDirectory)/$(buildFolderName)/$(testResultFolderName)/JaCoCo_coverage.xml'
+              summaryFileLocation: '$(Build.SourcesDirectory)/$(buildFolderName)/$(testResultFolderName)/CodeCov_Merged.xml'
               pathToSources: '$(Build.SourcesDirectory)/$(sourceFolderName)/'
           - script: |
-              bash <(curl -s https://codecov.io/bash) -f "./$(buildFolderName)/$(testResultFolderName)/JaCoCo_coverage.xml"
+              bash <(curl -s https://codecov.io/bash) -f "./$(buildFolderName)/$(testResultFolderName)/CodeCov_Merged.xml"
             displayName: 'Publish Code Coverage to Codecov.io'
 
   - stage: Deploy
@@ -288,4 +288,3 @@ stages:
               GitHubToken: $(GitHubToken)
               ReleaseBranch: $(defaultBranch)
               MainGitBranch: $(defaultBranch)
-

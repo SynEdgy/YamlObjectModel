@@ -236,10 +236,10 @@ stages:
             displayName: 'Publish Code Coverage to Azure DevOps'
             inputs:
               codeCoverageTool: 'JaCoCo'
-              summaryFileLocation: '$(Build.SourcesDirectory)/$(buildFolderName)/$(testResultFolderName)/JaCoCo_Merge.xml'
+              summaryFileLocation: '$(Build.SourcesDirectory)/$(buildFolderName)/$(testResultFolderName)/CodeCov_Merged.xml'
               pathToSources: '$(Build.SourcesDirectory)/$(sourceFolderName)/'
           - script: |
-              bash <(curl -s https://codecov.io/bash) -f "./$(buildFolderName)/$(testResultFolderName)/JaCoCo_Merge.xml"
+              bash <(curl -s https://codecov.io/bash) -f "./$(buildFolderName)/$(testResultFolderName)/CodeCov_Merged.xml"
             displayName: 'Publish Code Coverage to Codecov.io'
 
   - stage: Deploy

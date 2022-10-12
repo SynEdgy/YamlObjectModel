@@ -37,7 +37,7 @@ The documentation can be found in the [YamlObjectModel Wiki](https://github.com/
 
 ### Examples
 
-You can review the [Examples](/source/Examples) directory in the YamlObjectModel module
+You can review the Examples directory in the YamlObjectModel module
 for some general use scenarios for all of the resources that are in the module.
 
 The resource examples are also available in the [YamlObjectModel Wiki](https://github.com/dsccommunity/YamlObjectModel/wiki).

@@ -34,8 +34,6 @@ A full list of changes in each version can be found in the [change log](CHANGELO
 ## Documentation
 
 The documentation can be found in the [YamlObjectModel Wiki](https://github.com/dsccommunity/YamlObjectModel/wiki).
-The DSC resources schema files is used to automatically update the
-documentation on each PR merge.
 
 ### Examples
 
@@ -43,4 +41,3 @@ You can review the [Examples](/source/Examples) directory in the YamlObjectModel
 for some general use scenarios for all of the resources that are in the module.
 
 The resource examples are also available in the [YamlObjectModel Wiki](https://github.com/dsccommunity/YamlObjectModel/wiki).
-

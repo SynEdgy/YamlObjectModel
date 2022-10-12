@@ -217,14 +217,14 @@ stages:
               buildType: 'current'
               # If several pipeline jobs are generating code coverage, set the correct artifact name:
               artifactName: 'CodeCoverageWindows'
-              targetPath: '$(Build.SourcesDirectory)/$(buildFolderName)/$(testResultFolderName)'
+              targetPath: '$(Build.SourcesDirectory)/$(buildFolderName)/$(testResultFolderName)/CodeCoverageWindows'
           # If several pipeline jobs are generating code coverage, uncomment these tasks:
           - task: DownloadPipelineArtifact@2
             displayName: 'Download Test Artifact Linux'
             inputs:
               buildType: 'current'
               artifactName: 'CodeCoverageLinux'
-              targetPath: '$(Build.SourcesDirectory)/$(buildFolderName)/$(testResultFolderName)'
+              targetPath: '$(Build.SourcesDirectory)/$(buildFolderName)/$(testResultFolderName)/CodeCoverageLinux'
           - task: PowerShell@2 # Merges the code coverage files.
             name: merge
             displayName: 'Merge Code Coverage files'

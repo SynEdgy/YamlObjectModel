@@ -115,9 +115,9 @@ stages:
             displayName: 'Publish Test Artifact'
             inputs:
               targetPath: '$(buildFolderName)/$(testResultFolderName)/'
-              artifactName: $(testArtifactName)
+              #artifactName: $(testArtifactName)
               # If several pipeline jobs are generating code coverage, replace above with this:
-              #artifactName: 'CodeCoverageWindows' # Can be any, in the pipeline, unique name
+              artifactName: 'CodeCoverageWindows' # Can be any, in the pipeline, unique name
               parallel: true
 
       # If several pipeline jobs should run unit tests, uncomment this:
@@ -216,7 +216,7 @@ stages:
             inputs:
               buildType: 'current'
               # If several pipeline jobs are generating code coverage, set the correct artifact name:
-              artifactName: $(testArtifactName)
+              artifactName: 'CodeCoverageWindows'
               targetPath: '$(Build.SourcesDirectory)/$(buildFolderName)/$(testResultFolderName)'
           # If several pipeline jobs are generating code coverage, uncomment these tasks:
           - task: DownloadPipelineArtifact@2

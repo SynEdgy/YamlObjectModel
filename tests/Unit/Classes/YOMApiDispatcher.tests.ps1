@@ -1,5 +1,7 @@
+param ()
+
 BeforeAll {
-    $module = @{
+    $CurrentModule = @{
         ModuleName = 'YamlObjectModel'
     }
 
@@ -12,7 +14,7 @@ Describe 'Validating static class [YOMApiDispatcher]' {
     }
 
     It 'should have empty hash return to false from IsDefinition()' {
-        $isDefinition = InModuleScope @module -ScriptBlock {
+        $isDefinition = InModuleScope @CurrentModule -ScriptBlock {
             [YOMApiDispatcher]::IsDefinition(@{})
         }
 
@@ -21,7 +23,7 @@ Describe 'Validating static class [YOMApiDispatcher]' {
 
 
     It 'should have kind/spec return true from IsDefinition()' {
-        $isDefinition = InModuleScope @module -ScriptBlock {
+        $isDefinition = InModuleScope @CurrentModule -ScriptBlock {
             [YOMApiDispatcher]::IsDefinition(@{
                 kind = 'YOMBase'
                 spec = @{}
@@ -33,12 +35,12 @@ Describe 'Validating static class [YOMApiDispatcher]' {
 
     It 'should have string object return false from IsDefinition()' {
         {
-            $isDefinition = InModuleScope @module -ScriptBlock {
+            $isDefinition = InModuleScope @CurrentModule -ScriptBlock {
                 [YOMApiDispatcher]::IsDefinition('abc')
             }
         } | Should -Not -Throw
 
-        $isDefinition = InModuleScope @module -ScriptBlock {
+        $isDefinition = InModuleScope @CurrentModule -ScriptBlock {
             [YOMApiDispatcher]::IsDefinition('abc')
         }
 
@@ -46,7 +48,7 @@ Describe 'Validating static class [YOMApiDispatcher]' {
     }
 
     It 'should correctly instantiate a module specific class' {
-        $YOMInstance = InModuleScope @module -ScriptBlock {
+        $YOMInstance = InModuleScope @CurrentModule -ScriptBlock {
             [YOMApiDispatcher]::DispatchSpec(
                 @{
                     kind = 'YamlObjectModel\YOMBase'
@@ -58,7 +60,7 @@ Describe 'Validating static class [YOMApiDispatcher]' {
     }
 
     It 'should correctly instantiate with a class method' {
-        $YOMInstance = InModuleScope @module -ScriptBlock {
+        $YOMInstance = InModuleScope @CurrentModule -ScriptBlock {
             [YOMApiDispatcher]::DispatchSpec(
                 @{
                     kind = '[YOMApiDispatcher]::DispatchSpec()'
@@ -74,7 +76,7 @@ Describe 'Validating static class [YOMApiDispatcher]' {
     }
 
     It 'should correctly dispatch with a function' {
-        $YOMInstance = InModuleScope @module -ScriptBlock {
+        $YOMInstance = InModuleScope @CurrentModule -ScriptBlock {
             [YOMApiDispatcher]::DispatchSpec(
                 @{
                     kind = 'YamlObjectModel\Get-YOMObject'
@@ -92,7 +94,7 @@ Describe 'Validating static class [YOMApiDispatcher]' {
     }
 
     It 'should correctly dispatch with default type and hash' {
-        $YOMInstance = InModuleScope @module -ScriptBlock {
+        $YOMInstance = InModuleScope @CurrentModule -ScriptBlock {
             [YOMApiDispatcher]::DispatchSpec(
                 'YOMBase',
                 @{

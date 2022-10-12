@@ -1,9 +1,9 @@
 BeforeAll {
-    $module = @{
+    $CurrentModule = @{
         ModuleName = 'YamlObjectModel'
     }
 
-    Import-Module -Name YamlObjectModel -Force -ErrorAction Stop
+    Import-Module -Name 'YamlObjectModel' -Force -ErrorAction Stop
     $YOMTestClass = Get-Content -Raw -Path "$PSScriptRoot/../assets/3.YOMTest.ps1"
     $YOMOtherClass = Get-Content -Raw -Path "$PSScriptRoot/../assets/4.YOMOther.ps1"
 
@@ -17,8 +17,8 @@ BeforeAll {
 Describe 'Testing the [YOMSaveAble] class' {
     context 'Loading from file' {
         It 'Creates an instance of object by path' {
-            $obj = InModuleScope @module -ScriptBlock {
-                [YOMSaveableBase]"$PSScriptRoot/../assets/obj.yml"
+            $obj = InModuleScope @CurrentModule -ScriptBlock {
+                [YOMSaveableBase]"$PSScriptRoot/../assets/OtherObj.yml"
             }
 
             $obj | Should -not -BeNullOrEmpty
@@ -27,7 +27,7 @@ Describe 'Testing the [YOMSaveAble] class' {
 
         It 'Should throw when no file exists' {
             {
-                InModuleScope @module -ScriptBlock {
+                InModuleScope @CurrentModule -ScriptBlock {
                     [YOMSaveableBase]"$testdrive/donotexist.yml"
                 }
             } | Should -Throw
@@ -46,7 +46,7 @@ Describe 'Testing the [YOMSaveAble] class' {
         `$obj.Reload()
         `$obj
 "@ -join "`r`n"
-            $obj = InModuleScope @module -ScriptBlock ([scriptblock]::create($sb))
+            $obj = InModuleScope @CurrentModule -ScriptBlock ([scriptblock]::create($sb))
             $obj.test.stuff | Should -match 'Something else'
         }
     }
@@ -63,7 +63,7 @@ Describe 'Testing the [YOMSaveAble] class' {
     `$obj.SaveTo('$testdrive/obj.yml')
     '$testdrive/obj.yml'
 "@ -join "`r`n"
-            $test = InModuleScope @module -ScriptBlock ([scriptblock]::create($sb))
+            $test = InModuleScope @CurrentModule -ScriptBlock ([scriptblock]::create($sb))
             $test | Should -exist
             $obj = (Get-Content -Raw -Path $test | ConvertFrom-Yaml)
             $obj | Should -Not -BeNullOrEmpty
@@ -85,7 +85,7 @@ Describe 'Testing the [YOMSaveAble] class' {
         `$obj.Save()
         `$obj
 "@ -join "`r`n"
-        $obj = InModuleScope @module -ScriptBlock ([scriptblock]::create($sb))
+        $obj = InModuleScope @CurrentModule -ScriptBlock ([scriptblock]::create($sb))
         $obj | Should -not -BeNullOrEmpty
         $obj.SavedAtPath | Should -Exist
         $obj.test.Stuff | Should -be 'Another test'

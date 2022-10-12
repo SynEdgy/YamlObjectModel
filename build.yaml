@@ -49,7 +49,7 @@ BuildWorkflow:
     - package_module_nupkg
 
   hqrmtest:
-    - DscResource_Tests_Stop_On_Fail
+    - Invoke_HQRM_Tests_Stop_On_Fail
 
   # Defining test task to be run when invoking `./build.ps1 -Tasks test`
   test:
@@ -68,7 +68,7 @@ BuildWorkflow:
     - publish_module_to_gallery
     - Publish_Release_To_GitHub
     - Publish_GitHub_Wiki_Content
-
+    - Create_ChangeLog_GitHub_PR
 
 
 ####################################################
@@ -101,14 +101,25 @@ Pester:
   #CodeCoverageMergedOutputFile: JaCoCo_coverage.xml
   #CodeCoverageFilePattern: JaCoCo_Merge.xml
 
+
 DscTest:
-  ExcludeTag:
-    - "Common Tests - New Error-Level Script Analyzer Rules"
-  Tag:
-  ExcludeSourceFile:
-    - output
-  ExcludeModuleFile:
-    - Modules/DscResource.Common
+  Pester:
+    Configuration:
+      Filter:
+        Tag:
+        ExcludeTag:
+          - Common Tests - New Error-Level Script Analyzer Rules
+          # - Changelog
+          - Common Tests - Validate Example Files
+      Output:
+        Verbosity: Detailed
+  Script:
+    ExcludeSourceFile:
+      - output
+    ExcludeModuleFile:
+      - Modules/DscResource.Common
+      # - Modules/PSNativeCmdDevKit
+    MainGitBranch: main
 
 # Import ModuleBuilder tasks from a specific PowerShell module using the build
 # task's alias. Wildcard * can be used to specify all tasks that has a similar
@@ -120,6 +131,8 @@ ModuleBuildTasks:
   Sampler.GitHubTasks:
     - '*.ib.tasks'
   DscResource.DocGenerator:
+    - 'Task.*'
+  DscResource.Test:
     - 'Task.*'
 
 # Invoke-Build Header to be used to 'decorate' the terminal output of the tasks.
@@ -140,7 +153,7 @@ GitHubConfig:
   GitHubConfigUserName: dscbot
   GitHubConfigUserEmail: dsccommunity@outlook.com
   UpdateChangelogOnPrerelease: false
-
+  PublicRepo: https://github.com/synedgy/YamlObjectModel.git
 ####################################################
 #      DscResource.DocGenerator Configuration      #
 ####################################################

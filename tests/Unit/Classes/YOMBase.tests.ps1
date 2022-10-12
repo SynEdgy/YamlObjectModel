@@ -1,5 +1,7 @@
+param ()
+
 BeforeAll {
-    $module = @{
+    $CurrentModule = @{
         ModuleName = 'YamlObjectModel'
     }
 
@@ -17,7 +19,7 @@ BeforeAll {
 Describe 'Validating class [YOMBase]' {
 
     BeforeEach {
-        $YOMBase = InModuleScope @module -ScriptBlock {
+        $YOMBase = InModuleScope @CurrentModule -ScriptBlock {
             [YOMBase]::new()
         }
     }
@@ -35,7 +37,7 @@ Describe 'Validating class [YOMBase]' {
     }
 
     It 'should correctly instantiate the YOMBase class by casting a hashtable' {
-        $YOMBaseInstance = InModuleScope @module -ScriptBlock {
+        $YOMBaseInstance = InModuleScope @CurrentModule -ScriptBlock {
             [YOMBase]@{
                 test = 'abc'
             }
@@ -45,7 +47,7 @@ Describe 'Validating class [YOMBase]' {
     }
 
     It 'should correctly instantiate the YOMBase class by casting kind/spec hash' {
-        $YOMBaseInstance = InModuleScope @module -ScriptBlock {
+        $YOMBaseInstance = InModuleScope @CurrentModule -ScriptBlock {
             [YOMBase]@{
                 kind = 'YOMBase'
                 spec = @{
@@ -58,7 +60,7 @@ Describe 'Validating class [YOMBase]' {
     }
 
     It 'should correctly instantiate the YOMBase class by kind/spec' {
-        $YOMBaseInstance = InModuleScope @module -ScriptBlock {
+        $YOMBaseInstance = InModuleScope @CurrentModule -ScriptBlock {
             [YOMBase]::new(@{
                 kind = 'YOMBase'
                 spec = @{
@@ -71,7 +73,7 @@ Describe 'Validating class [YOMBase]' {
     }
 
     It 'should serialize the class without undefined properties but kind|spec' {
-        $YOMBaseInstance = InModuleScope @module -ScriptBlock {
+        $YOMBaseInstance = InModuleScope @CurrentModule -ScriptBlock {
             [YOMBase]@{
                 test = 'abc'
                 somethingElse = 'foo'

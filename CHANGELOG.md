@@ -8,11 +8,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Base class
-- Saveable Base class (supports Save(), LoadFromFile(), Reload() methods)
-- YOMApiDispatcher and its DispatchSpec() static method
-- Get-YOMObject to have a function to interact with the static method
-- Added tests
-- Updated pipeline config
+- Saveable Base class (supports Save(), LoadFromFile(), Reload() methods).
+- YOMApiDispatcher and its DispatchSpec() static method.
+- Get-YOMObject to have a function to interact with the static method.
+- Added tests.
+- Updated pipeline config.
+- Adding an example and wiki doc file.
 
 ### Security
 

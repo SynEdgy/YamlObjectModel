@@ -24,35 +24,9 @@ class YOMBase : IYamlConvertible
 
     [void] Read([IParser] $Parser, [Type] $Type, [ObjectDeserializer] $NestedObjectDeserializer)
     {
-        # $consumeGenericMethod = [IParser].GetMethod("TryConsume")
-        # $closedConsumeGenericMethod = $consumeGenericMethod.MakeGenericMethod([SequenceStart])
-        # $closedConsumeGenericMethod.Invoke()
-
-        # while ($Parser.TryConsume<Scalar>(out var $key))
-        # {
-        #     if ($key.Value == "config_two")
-        #     {
-        #         var config = deserializer.Deserialize<ConfigTwo>(parser);
-        #         Console.WriteLine(config.Random);
-        #     }
-        #     else
-        #     {
-        #         parser.SkipThisAndNestedEvents();
-        #         Console.WriteLine($"Skipped {key.Value}");
-        #     }
-        # }
-        # $scalar = $Parser.Allow()
-        # if ($null -ne $scalar)
-        # {
-        #     $this.Test = $scalar.Value
-        #     $this.Prod = $scalar.Value
-        # }
-        # else
-        # {
-        #     # var values = (SettingsBase)nestedObjectDeserializer(typeof(SettingsBase));
-        #     # this.Test = values.Test;
-        #     # this.Prod = values.Prod;
-        # }
+        # TODO
+        # This is to parse Yaml to this object when we use an annotation registered with the parser
+        # I don't think that's possible with PowerShell-Yaml yet.
     }
 
     [void] Write([IEmitter] $Emitter, [ObjectSerializer] $NestedObjectSerializer)

@@ -13,7 +13,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Get-YOMObject to have a function to interact with the static method.
 - Added tests.
 - Updated pipeline config.
-- Adding an example and wiki doc file.
+- Adding an example with comments and wiki doc file.
+- Cosmetic fixes.
 
 ### Security
 

@@ -44,12 +44,21 @@ class YOMApiDispatcher
         $moduleString = ''
         $returnCode = ''
         $action = ''
+        $moduleLoaded = $null
 
-        if ($Definition.Kind -match '\\')
+        if (-not [YOMApiDispatcher]::IsDefinition($Definition))
+        {
+            throw 'The Definition does not infer the object type to create from those properties. Please define it under the ''kind'' key.'
+        }
+        elseif ($Definition.Kind -match '\\')
         {
             $moduleName, $action = $Definition.Kind.Split('\', 2)
-            Write-Debug -Message "Module is '$moduleName'"
-            if ($action -match '\-')
+            $moduleLoaded = Get-Module -Name $moduleName -ErrorAction SilentlyContinue
+            if ($null -ne $moduleLoaded)
+            {
+                $moduleString = ('$m = Get-Module -Name ''{0}'' -ErrorAction ''Stop''{1}' -f $moduleName,"`r`n")
+            }
+            elseif ($action -match '\-')
             {
                 $moduleString = "Import-Module $moduleName"
             }
@@ -57,6 +66,8 @@ class YOMApiDispatcher
             {
                 $moduleString = "using module $moduleName"
             }
+
+            Write-Debug -Message ('Module import: {0}' -f $moduleString)
         }
         else
         {
@@ -77,14 +88,28 @@ class YOMApiDispatcher
             $StaticMethod = $StaticMethod.Trim('\(\):')
             $className = $className.Trim('\[\]')
             Write-Debug -Message "Calling static method '[$className]::$StaticMethod(`$spec)'"
-            $returnCode = "return [$className]::$StaticMethod(`$args[0])"
+            if ($null -ne $moduleLoaded)
+            {
+                $returnCode = "return (&`$m {return [$className]::$StaticMethod(`$args[0])})"
+            }
+            else
+            {
+                $returnCode = "return [$className]::$StaticMethod(`$args[0])"
+            }
         }
         else
         {
             # [Class]::New()
             $className = $action
             Write-Debug -Message ('Creating new [{0}]' -f $className)
-            $returnCode = "return [$className]::new(`$args[0])"
+            if ($null -ne $moduleLoaded)
+            {
+                $returnCode = "return (&`$m {[$className]::new(`$args[0])})"
+            }
+            else
+            {
+                $returnCode = "return [$className]::new(`$args[0])"
+            }
         }
 
         $specObject = $Definition.spec

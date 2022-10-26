@@ -16,6 +16,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Adding an example with comments and wiki doc file.
 - Cosmetic fixes.
 
+### Changed
+
+- If module is loaded invoke object creation or method in module context.
 ### Security
 
 - In case of vulnerabilities please report them to contact {at} synedgy.com.

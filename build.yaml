@@ -87,7 +87,7 @@ Pester:
   Script:
     - tests/Unit
   Tag:
-  CodeCoverageThreshold: 92 # Set to 0 to bypass
+  CodeCoverageThreshold: 91 # Set to 0 to bypass
   CodeCoverageOutputFile: CodeCoverage.xml
   CodeCoverageOutputFileEncoding: ascii
   # Use this if code coverage should be merged from several pipeline test jobs.

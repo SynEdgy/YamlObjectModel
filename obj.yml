@@ -1,0 +1,5 @@
+kind: MyTest
+spec:
+  Property1: thingy
+  Property2: something else
+

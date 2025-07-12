@@ -19,6 +19,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - If module is loaded invoke object creation or method in module context.
+- Fully Qualify the Kind with its module when it's a custom class.
+
 ### Security
 
 - In case of vulnerabilities please report them to contact {at} synedgy.com.

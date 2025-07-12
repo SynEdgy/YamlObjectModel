@@ -90,7 +90,7 @@ class YOMApiDispatcher
             Write-Debug -Message "Calling static method '[$className]::$StaticMethod(`$spec)'"
             if ($null -ne $moduleLoaded)
             {
-                $returnCode = "return (&`$m {return [$className]::$StaticMethod(`$args[0])})"
+                $returnCode = "return (&`$m {return [$className]::$StaticMethod(`$args[0])} `$args[0])"
             }
             else
             {
@@ -99,16 +99,16 @@ class YOMApiDispatcher
         }
         else
         {
-            # [Class]::New()
-            $className = $action
+            # [Class]$var
+            $className = $action.Trim('\[\]')
             Write-Debug -Message ('Creating new [{0}]' -f $className)
             if ($null -ne $moduleLoaded)
             {
-                $returnCode = "return (&`$m {[$className]::new(`$args[0])})"
+                $returnCode = "return (&`$m {[$className]`$args[0]} `$args[0])"
             }
             else
             {
-                $returnCode = "return [$className]::new(`$args[0])"
+                $returnCode = "return [$className]`$args[0]"
             }
         }
 

@@ -23,8 +23,13 @@ function Get-YOMObject
         $dispatchDefinition = {
             param
             (
-                [IDictionary] $ObjectDefinition,
-                [string] $SourcePath
+                [Parameter()]
+                [IDictionary]
+                $ObjectDefinition,
+
+                [Parameter()]
+                [string]
+                $SourcePath
             )
 
             $createdObject = if ($DefaultType)

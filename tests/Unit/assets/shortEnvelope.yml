@@ -1,0 +1,6 @@
+apiVersion: yom.synedgy.com/v1alpha1
+metadata:
+  Name: short-envelope
+spec:
+  Stuff: Short envelope value
+

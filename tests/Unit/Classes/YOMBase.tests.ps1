@@ -72,7 +72,7 @@ Describe 'Validating class [YOMBase]' {
         $YOMBaseInstance | Should -Not -BeNullOrEmpty
     }
 
-    It 'should serialize the class without undefined properties but kind|spec' {
+    It 'should omit unset optional envelope fields' {
         $YOMBaseInstance = InModuleScope @CurrentModule -ScriptBlock {
             [YOMBase]@{
                 test = 'abc'
@@ -84,7 +84,140 @@ Describe 'Validating class [YOMBase]' {
         $YOMBaseInstance | Should -Not -BeNullOrEmpty
         $YOMBaseInstance.test | Should -BeNullOrEmpty
         $YOMBaseInstance.somethingElse | Should -BeNullOrEmpty
-        $YOMBaseInstance.ToYaml() | Should -Match '^kind: YOMBase'
-        $YOMBaseInstance.ToJSON() | Should -Match '^{\s*\"kind":\s*\"YOMBase\"'
+        $yaml = $YOMBaseInstance.ToYaml() | ConvertFrom-Yaml -Ordered
+        $json = $YOMBaseInstance.ToJSON() | ConvertFrom-Json
+
+        @($yaml.Keys) | Should -Be @('kind', 'spec')
+        $yaml.kind | Should -Be 'YOMBase'
+        $json.kind | Should -Be 'YOMBase'
+        $json.PSObject.Properties.Name | Should -Not -Contain 'apiVersion'
+        $json.PSObject.Properties.Name | Should -Not -Contain 'metadata'
+    }
+
+    It 'should preserve resource envelope values through construction and serialization' {
+        $YOMBaseInstance = InModuleScope @CurrentModule -ScriptBlock {
+            [YOMBase]::new([ordered]@{
+                apiVersion = 'yom.synedgy.com/v1alpha1'
+                kind = 'YamlObjectModel\YOMBase'
+                metadata = [ordered]@{
+                    Name = 'round-trip'
+                    Labels = [ordered]@{
+                        purpose = 'unit-test'
+                    }
+                }
+                spec = [ordered]@{}
+            })
+        }
+
+        $serialized = $YOMBaseInstance.ToYaml() | ConvertFrom-Yaml -Ordered
+
+        $serialized.apiVersion | Should -Be 'yom.synedgy.com/v1alpha1'
+        $serialized.kind | Should -Be 'YamlObjectModel\YOMBase'
+        $serialized.metadata.Name | Should -Be 'round-trip'
+        $serialized.metadata.Labels.purpose | Should -Be 'unit-test'
+    }
+
+    It 'should continue accepting legacy kind and spec construction' {
+        $YOMBaseInstance = InModuleScope @CurrentModule -ScriptBlock {
+            [YOMBase]::new([ordered]@{
+                kind = 'YOMBase'
+                spec = [ordered]@{}
+            })
+        }
+
+        $YOMBaseInstance.Kind | Should -Be 'YOMBase'
+        $YOMBaseInstance.ApiVersion | Should -Be ''
+        $YOMBaseInstance.Metadata.Count | Should -Be 0
+    }
+
+    It 'should accept null metadata as empty metadata' {
+        $YOMBaseInstance = InModuleScope @CurrentModule -ScriptBlock {
+            [YOMBase]::new([ordered]@{
+                kind = 'YOMBase'
+                metadata = $null
+                spec = [ordered]@{}
+            })
+        }
+
+        $YOMBaseInstance.Metadata.Count | Should -Be 0
+    }
+
+    It 'should reject non-dictionary metadata' {
+        {
+            InModuleScope @CurrentModule -ScriptBlock {
+                [YOMBase]::new([ordered]@{
+                    kind = 'YOMBase'
+                    metadata = 'invalid'
+                    spec = [ordered]@{}
+                })
+            }
+        } | Should -Throw '*metadata must be a dictionary*'
+    }
+
+    It 'should reject a resource envelope with a non-dictionary spec' {
+        {
+            InModuleScope @CurrentModule -ScriptBlock {
+                [YOMBase]::new([ordered]@{
+                    kind = 'YOMBase'
+                    spec = 'invalid'
+                })
+            }
+        } | Should -Throw '*spec must be a dictionary*'
+    }
+
+    It 'should reject a null raw spec' {
+        {
+            InModuleScope @CurrentModule -ScriptBlock {
+                [YOMBase]::new([System.Collections.IDictionary] $null)
+            }
+        } | Should -Throw '*RawSpec*'
+    }
+
+    It 'should omit metadata when it is explicitly cleared before serialization' {
+        $YOMBaseInstance = InModuleScope @CurrentModule -ScriptBlock {
+            $instance = [YOMBase]::new()
+            $instance.Metadata = $null
+            $instance
+        }
+
+        $serialized = $YOMBaseInstance.ToYaml() | ConvertFrom-Yaml -Ordered
+        $serialized.Contains('metadata') | Should -BeFalse
+    }
+
+    It 'should construct directly from a typed short envelope' {
+        $YOMBaseInstance = InModuleScope @CurrentModule -ScriptBlock {
+            [YOMBase]::new([ordered]@{
+                apiVersion = 'yom.synedgy.com/v1alpha1'
+                metadata = [ordered]@{
+                    Name = 'direct-short'
+                }
+                spec = [ordered]@{}
+            })
+        }
+
+        $YOMBaseInstance.ApiVersion | Should -Be 'yom.synedgy.com/v1alpha1'
+        $YOMBaseInstance.Metadata.Name | Should -Be 'direct-short'
+    }
+
+    It 'should reject non-dictionary metadata in a typed short envelope' {
+        {
+            InModuleScope @CurrentModule -ScriptBlock {
+                [YOMBase]::new([ordered]@{
+                    metadata = 'invalid'
+                    spec = [ordered]@{}
+                })
+            }
+        } | Should -Throw '*metadata must be a dictionary*'
+    }
+
+    It 'should reject non-dictionary spec in a typed short envelope' {
+        {
+            InModuleScope @CurrentModule -ScriptBlock {
+                [YOMBase]::new([ordered]@{
+                    apiVersion = 'yom.synedgy.com/v1alpha1'
+                    spec = 'invalid'
+                })
+            }
+        } | Should -Throw '*spec must be a dictionary*'
     }
 }

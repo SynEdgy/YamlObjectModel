@@ -20,54 +20,73 @@ function Get-YOMObject
 
     begin
     {
+        $dispatchDefinition = {
+            param
+            (
+                [Parameter()]
+                [IDictionary]
+                $ObjectDefinition,
+
+                [Parameter()]
+                [string]
+                $SourcePath
+            )
+
+            $createdObject = if ($DefaultType)
+            {
+                Write-Debug -Message "Trying to build the object [DefaultType: $DefaultType].`r`n$($ObjectDefinition)"
+                [YOMApiDispatcher]::DispatchSpec($DefaultType, $ObjectDefinition)
+            }
+            else
+            {
+                Write-Debug -Message "Trying to build the object:`r`n $($ObjectDefinition | ConvertTo-Yaml -Options EmitDefaults)"
+                [YOMApiDispatcher]::DispatchSpec($ObjectDefinition)
+            }
+
+            if (
+                -not [string]::IsNullOrEmpty($SourcePath) -and
+                $createdObject.PSObject.Properties.Name -contains 'SavedAtPath'
+            )
+            {
+                $createdObject.SavedAtPath = $SourcePath
+            }
+
+            return $createdObject
+        }
+    }
+
+    process
+    {
         if ($PSCmdlet.ParameterSetName -eq 'ByPath')
         {
-            $Definition = foreach ($pathItem in $Path)
+            foreach ($pathItem in $Path)
             {
                 $files = if (Test-Path -Path $pathItem -PathType Container)
                 {
-                    #TODO: Handle new defaults on subdirectories if defined
-                    (Get-ChildItem -Path $pathItem -File -Include *.yml -Recurse).FullName
+                    (Get-ChildItem -Path $pathItem -File -Filter '*.yml' -Recurse).FullName
                 }
                 else
                 {
                     Get-YOMAbsolutePath -Path $pathItem
                 }
 
-                $files.foreach({
-                    $fileItem = $_
-                    #TODO: Each file is a container representing objects
-                    (Get-Content -Raw -Path $_ |
-                      ConvertFrom-Yaml -AllDocuments -Ordered).Foreach{
-                        if ([string]::IsNullOrEmpty($_.kind))
-                        {
-                            $_['SavedAtPath'] = $fileItem
-                        }
-                        else
-                        {
-                            $_['spec']['SavedAtPath'] = $fileItem
-                        }
+                foreach ($fileItem in $files)
+                {
+                    $objectDefinitions = Get-Content -Raw -Path $fileItem |
+                        ConvertFrom-Yaml -AllDocuments -Ordered
 
-                        $_ #returning definition dans $Definition
-                      }
-                })
+                    foreach ($objectDefinition in $objectDefinitions)
+                    {
+                        & $dispatchDefinition $objectDefinition $fileItem
+                    }
+                }
             }
         }
-    }
-
-    process
-    {
-        foreach ($objectDefinition in $Definition)
+        else
         {
-            if ($DefaultType)
+            foreach ($objectDefinition in $Definition)
             {
-                Write-Debug -Message "Trying to build the object [DefaultType: $DefaultType].`r`n$($objectDefinition)"
-                [YOMApiDispatcher]::DispatchSpec($DefaultType, $objectDefinition)
-            }
-            else
-            {
-                Write-Debug -Message "Trying to build the object:`r`n $($objectDefinition | ConvertTo-Yaml -Options EmitDefaults)"
-                [YOMApiDispatcher]::DispatchSpec($objectDefinition)
+                & $dispatchDefinition $objectDefinition ''
             }
         }
     }

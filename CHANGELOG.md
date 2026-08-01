@@ -5,6 +5,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Added Kubernetes-style `apiVersion`, `kind`, `metadata`, and `spec` YOM resource envelopes, omitting unset optional fields.
+- Added typed short-envelope dispatch when a default type is supplied.
+
+### Changed
+
+- Preserved backward-compatible loading of legacy raw specs and `kind`/`spec` definitions.
+- Stopped injecting `SavedAtPath` into portable object specifications during file loading.
+- Replaced the placeholder README and expanded the conceptual wiki with envelope, dispatch, short-form, nesting, serialization, and compatibility guidance.
+
+### Fixed
+
+- Pinned the Azure Pipelines GitVersion tool to the compatible 5.x release line.
+- Resolved HQRM violations in the saveable-object example and `Get-YOMObject` helper parameter block.
+
 ## [0.1.4] - 2022-10-26
 
 ### Added

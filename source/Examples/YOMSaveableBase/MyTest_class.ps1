@@ -38,7 +38,7 @@ $obj.SaveTo('./obj.yml')
 # change something in the file
 $obj.Reload()
 
-Write-Host -Object $obj.ToString()
+Write-Output -InputObject $obj.ToString()
 
 # In a different session where the object is loaded and namespace/module available
 # using module YamlObjectModel

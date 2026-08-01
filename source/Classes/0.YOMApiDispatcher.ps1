@@ -22,7 +22,41 @@ class YOMApiDispatcher
 
     static [Object] DispatchSpec([string] $DefaultType, [IDictionary] $Definition)
     {
-        if (-not $Definition.Contains('kind'))
+        if ($Definition.Contains('kind'))
+        {
+            Write-Debug 'Definition defines kind, dispatching.'
+            return [YOMApiDispatcher]::DispatchSpec($Definition)
+        }
+        elseif (
+            $Definition.Contains('spec') -and
+            ($Definition.Contains('apiVersion') -or $Definition.Contains('metadata'))
+        )
+        {
+            Write-Debug "Dispatching typed short envelope as $DefaultType."
+            $typedDefinition = [ordered]@{
+                apiVersion = if ($Definition.Contains('apiVersion'))
+                {
+                    $Definition['apiVersion']
+                }
+                else
+                {
+                    ''
+                }
+                kind = $DefaultType
+                metadata = if ($Definition.Contains('metadata'))
+                {
+                    $Definition['metadata']
+                }
+                else
+                {
+                    [ordered]@{}
+                }
+                spec = $Definition['spec']
+            }
+
+            return [YOMApiDispatcher]::DispatchSpec($typedDefinition)
+        }
+        else
         {
             Write-Debug "Dispatching spec as $DefaultType."
             return [YOMApiDispatcher]::DispatchSpec(
@@ -31,11 +65,6 @@ class YOMApiDispatcher
                     spec = $Definition
                 }
             )
-        }
-        else
-        {
-            Write-Debug "Definition defines kind, dispatching."
-            return [YOMApiDispatcher]::DispatchSpec($Definition)
         }
     }
 
@@ -49,6 +78,10 @@ class YOMApiDispatcher
         if (-not [YOMApiDispatcher]::IsDefinition($Definition))
         {
             throw 'The Definition does not infer the object type to create from those properties. Please define it under the ''kind'' key.'
+        }
+        elseif (-not $Definition.Contains('spec') -or $Definition['spec'] -isnot [IDictionary])
+        {
+            throw 'The Definition must contain a dictionary under the ''spec'' key.'
         }
         elseif ($Definition.Kind -match '\\')
         {
@@ -90,7 +123,7 @@ class YOMApiDispatcher
             Write-Debug -Message "Calling static method '[$className]::$StaticMethod(`$spec)'"
             if ($null -ne $moduleLoaded)
             {
-                $returnCode = "return (&`$m {return [$className]::$StaticMethod(`$args[0])})"
+                $returnCode = "return (&`$m {return [$className]::$StaticMethod(`$args[0])} `$args[0])"
             }
             else
             {
@@ -104,7 +137,7 @@ class YOMApiDispatcher
             Write-Debug -Message ('Creating new [{0}]' -f $className)
             if ($null -ne $moduleLoaded)
             {
-                $returnCode = "return (&`$m {[$className]::new(`$args[0])})"
+                $returnCode = "return (&`$m {[$className]::new(`$args[0])} `$args[0])"
             }
             else
             {
@@ -115,11 +148,39 @@ class YOMApiDispatcher
         $specObject = $Definition.spec
         $script = "$moduleString`r`n$returnCode"
         Write-Debug -Message "ScriptBlock = {`r`n$script`r`n}"
-        $createdObject = [scriptblock]::Create($script).Invoke($specObject)[0]
+        $createdObject = [scriptblock]::Create($script).Invoke((,$specObject))[0]
         if ($createdObject.PSobject.Properties.Name -contains 'kind')
         {
-            #TODO: Make sure the file metadata is also available here
             $createdObject.Kind = $Definition.Kind
+        }
+
+        if ($createdObject.PSobject.Properties.Name -contains 'ApiVersion')
+        {
+            $createdObject.ApiVersion = if ($Definition.Contains('apiVersion'))
+            {
+                [string] $Definition['apiVersion']
+            }
+            else
+            {
+                ''
+            }
+        }
+
+        if ($createdObject.PSobject.Properties.Name -contains 'Metadata')
+        {
+            $createdObject.Metadata = [ordered]@{}
+            if ($Definition.Contains('metadata') -and $null -ne $Definition['metadata'])
+            {
+                if ($Definition['metadata'] -isnot [IDictionary])
+                {
+                    throw 'The Definition metadata must be a dictionary.'
+                }
+
+                foreach ($metadataKey in $Definition['metadata'].Keys)
+                {
+                    $createdObject.Metadata[$metadataKey] = $Definition['metadata'][$metadataKey]
+                }
+            }
         }
 
         return $createdObject

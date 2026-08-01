@@ -64,4 +64,32 @@ Describe 'Get-YOMObject' {
         $obj = InModuleScope @module -ScriptBlock ([scriptblock]::create($sb))
         $obj.stuff | Should -be 'Something special'
     }
+
+    It 'should load a Kubernetes-style resource envelope from a file' {
+        $sb = $sb,"Get-YOMObject -Path '$PSScriptRoot/../assets/newEnvelope.yml' -ErrorAction 'stop'" -join "`r`n"
+        $obj = InModuleScope @module -ScriptBlock ([scriptblock]::create($sb))
+
+        $obj.Stuff | Should -Be 'New envelope value'
+        $obj.ApiVersion | Should -Be 'yom.synedgy.com/v1alpha1'
+        $obj.Metadata.Name | Should -Be 'new-envelope'
+    }
+
+    It 'should load a typed short envelope from a file' {
+        $sb = $sb,"Get-YOMObject -Path '$PSScriptRoot/../assets/shortEnvelope.yml' -DefaultType 'YOMTest' -ErrorAction 'stop'" -join "`r`n"
+        $obj = InModuleScope @module -ScriptBlock ([scriptblock]::create($sb))
+
+        $obj.Stuff | Should -Be 'Short envelope value'
+        $obj.Kind | Should -Be 'YOMTest'
+        $obj.ApiVersion | Should -Be 'yom.synedgy.com/v1alpha1'
+        $obj.Metadata.Name | Should -Be 'short-envelope'
+    }
+
+    It 'should keep SavedAtPath out of the portable spec' {
+        $sb = $sb,"Get-YOMObject -Path '$PSScriptRoot/../assets/obj.yml' -ErrorAction 'stop'" -join "`r`n"
+        $obj = InModuleScope @module -ScriptBlock ([scriptblock]::create($sb))
+        $serialized = $obj.ToYaml() | ConvertFrom-Yaml -Ordered
+
+        $obj.SavedAtPath | Should -Not -BeNullOrEmpty
+        $serialized.spec.Contains('SavedAtPath') | Should -BeFalse
+    }
 }

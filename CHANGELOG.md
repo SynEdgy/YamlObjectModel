@@ -16,6 +16,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Stopped injecting `SavedAtPath` into portable object specifications during file loading.
 - Replaced the placeholder README and expanded the conceptual wiki with envelope, dispatch, short-form, nesting, serialization, and compatibility guidance.
 
+### Fixed
+
+- Pinned the Azure Pipelines GitVersion tool to the compatible 5.x release line.
+
 ## [0.1.4] - 2022-10-26
 
 ### Added

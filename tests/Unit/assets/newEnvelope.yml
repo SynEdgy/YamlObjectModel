@@ -1,0 +1,9 @@
+apiVersion: yom.synedgy.com/v1alpha1
+kind: YOMTest
+metadata:
+  Name: new-envelope
+  Labels:
+    purpose: unit-test
+spec:
+  Stuff: New envelope value
+

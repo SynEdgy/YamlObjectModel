@@ -8,9 +8,13 @@ using namespace System.Collections.Specialized
 class YOMBase : IYamlConvertible
 {
     [YamlIgnoreAttribute()]
-    hidden [string] $kind
+    [string] $ApiVersion = ''
     [YamlIgnoreAttribute()]
-    hidden [OrderedDictionary] $spec
+    [string] $Kind = ''
+    [YamlIgnoreAttribute()]
+    [OrderedDictionary] $Metadata = [ordered]@{}
+    [YamlIgnoreAttribute()]
+    hidden [OrderedDictionary] $Spec = [ordered]@{}
 
     YOMBase()
     {
@@ -31,13 +35,33 @@ class YOMBase : IYamlConvertible
 
     [void] Write([IEmitter] $Emitter, [ObjectSerializer] $NestedObjectSerializer)
     {
-        $outerObject = [ordered]@{
-            kind = $this.GetType().ToString() # Problem here is that we don't know which module it's coming from...
-            spec = [ordered]@{}
+        $outerObject = [ordered]@{}
+
+        if (-not [string]::IsNullOrEmpty($this.ApiVersion))
+        {
+            $outerObject['apiVersion'] = $this.ApiVersion
         }
 
+        $outerObject['kind'] = if ([string]::IsNullOrEmpty($this.Kind))
+        {
+            $this.GetType().ToString()
+        }
+        else
+        {
+            $this.Kind
+        }
+
+        if ($null -ne $this.Metadata -and $this.Metadata.Count -gt 0)
+        {
+            $outerObject['metadata'] = $this.Metadata
+        }
+
+        $outerObject['spec'] = [ordered]@{}
+
         $this.PSObject.Properties.Where({
-            $_.Name -in $this.GetType().GetProperties().Where{$_.CustomAttributes.AttributeType -ne [YamlDotNet.Serialization.YamlIgnoreAttribute]}.name -and
+            $_.Name -in $this.GetType().GetProperties().Where{
+                $_.CustomAttributes.AttributeType -ne [YamlDotNet.Serialization.YamlIgnoreAttribute]
+            }.name -and
             $true -eq $_.IsSettable}).Foreach{
             $outerObject.spec.Add($_.Name,$_.Value)
         }
@@ -47,48 +71,113 @@ class YOMBase : IYamlConvertible
 
     hidden [void] ResolveSpec([string] $kind, [IDictionary] $RawSpec)
     {
-        $this.Kind = $RawSpec.kind
-        $this.ResolveSpec($RawSpec)
+        $this.Kind = $kind
+        $this.ResolveSpecProperties($RawSpec)
     }
 
     hidden [void] ResolveSpec([IDictionary] $RawSpec)
     {
-        if (-not [string]::IsNullOrEmpty($RawSpec.kind))
+        if ($null -eq $RawSpec)
         {
-            $this.ResolveSpec($RawSpec.kind,$RawSpec.Spec)
+            throw [System.ArgumentNullException]::new('RawSpec')
+        }
+
+        if ($RawSpec.Contains('kind'))
+        {
+            $this.Kind = [string] $RawSpec['kind']
+
+            if ($RawSpec.Contains('apiVersion'))
+            {
+                $this.ApiVersion = [string] $RawSpec['apiVersion']
+            }
+
+            if ($RawSpec.Contains('metadata'))
+            {
+                $this.Metadata = [ordered]@{}
+                if ($null -ne $RawSpec['metadata'])
+                {
+                    if ($RawSpec['metadata'] -isnot [IDictionary])
+                    {
+                        throw [System.ArgumentException]::new('metadata must be a dictionary.')
+                    }
+
+                    foreach ($metadataKey in $RawSpec['metadata'].Keys)
+                    {
+                        $this.Metadata[$metadataKey] = $RawSpec['metadata'][$metadataKey]
+                    }
+                }
+            }
+
+            if (-not $RawSpec.Contains('spec') -or $RawSpec['spec'] -isnot [IDictionary])
+            {
+                throw [System.ArgumentException]::new('spec must be a dictionary.')
+            }
+
+            $this.ResolveSpecProperties($RawSpec['spec'])
+        }
+        elseif (
+            $RawSpec.Contains('spec') -and
+            ($RawSpec.Contains('apiVersion') -or $RawSpec.Contains('metadata'))
+        )
+        {
+            if ($RawSpec.Contains('apiVersion'))
+            {
+                $this.ApiVersion = [string] $RawSpec['apiVersion']
+            }
+
+            if ($RawSpec.Contains('metadata'))
+            {
+                $this.Metadata = [ordered]@{}
+                if ($null -ne $RawSpec['metadata'])
+                {
+                    if ($RawSpec['metadata'] -isnot [IDictionary])
+                    {
+                        throw [System.ArgumentException]::new('metadata must be a dictionary.')
+                    }
+
+                    foreach ($metadataKey in $RawSpec['metadata'].Keys)
+                    {
+                        $this.Metadata[$metadataKey] = $RawSpec['metadata'][$metadataKey]
+                    }
+                }
+            }
+
+            if ($RawSpec['spec'] -isnot [IDictionary])
+            {
+                throw [System.ArgumentException]::new('spec must be a dictionary.')
+            }
+
+            $this.ResolveSpecProperties($RawSpec['spec'])
         }
         else
         {
-            if (-not [string]::IsNullOrEmpty($this.kind))
+            $this.ResolveSpecProperties($RawSpec)
+        }
+    }
+
+    hidden [void] ResolveSpecProperties([IDictionary] $RawSpec)
+    {
+        $this.Spec = [ordered]@{}
+
+        foreach ($keyInSpec in $RawSpec.Keys)
+        {
+            Write-Debug -Message "Testing value of [$keyInSpec] for object definition..."
+            $ValueForSpec = if ([YOMApiDispatcher]::IsDefinition($RawSpec.($keyInSpec)))
             {
-                $this.kind = $RawSpec.kind
+                Write-Debug -Message 'Resolving value as an object.'
+                [YOMApiDispatcher]::DispatchSpec($RawSpec.($keyInSpec))
+            }
+            else
+            {
+                Write-Debug -Message "The Value is --->$($RawSpec.($keyInSpec))"
+                $RawSpec.($keyInSpec)
             }
 
-            $this.Spec = [Ordered]@{}
-
-            foreach ($keyInSpec in $RawSpec.Keys)
+            $this.Spec.Add($keyInSpec,$ValueForSpec)
+            if ($this.PSObject.Properties.Item($keyInSpec).IsSettable)
             {
-                Write-Debug -Message "Testing value of [$keyInSpec] for object definition..."
-                $ValueForSpec = if ([YOMApiDispatcher]::IsDefinition($RawSpec.($keyInSpec)))
-                {
-                    # value is a nested object definition
-                    Write-Debug -Message "Resolving value as an object."
-                    [YOMApiDispatcher]::DispatchSpec($RawSpec.($keyInSpec))
-                }
-                else #TODO: make sure you have an elseif() when the object is a 'shorthand' of an object (handler or object)
-                {
-                    # Value is not a hash with kind, return as-is
-                    Write-Debug -Message "The Value is --->$($RawSpec.($keyInSpec))"
-                    $RawSpec.($keyInSpec)
-                }
-
-                $this.Spec.Add($keyInSpec,$ValueForSpec)
-                if ($this.PSObject.Properties.Item($keyInSpec).issettable)
-                {
-                    $this.($keyInSpec) = $RawSpec.($keyInSpec)
-                }
+                $this.($keyInSpec) = $RawSpec.($keyInSpec)
             }
-
         }
     }
 

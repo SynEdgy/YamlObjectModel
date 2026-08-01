@@ -108,4 +108,121 @@ Describe 'Validating static class [YOMApiDispatcher]' {
 
         $YOMInstance | Should -not -BeNullOrEmpty
     }
+
+    It 'should dispatch a Kubernetes-style resource envelope' {
+        $YOMInstance = InModuleScope @CurrentModule -ScriptBlock {
+            [YOMApiDispatcher]::DispatchSpec(
+                [ordered]@{
+                    apiVersion = 'yom.synedgy.com/v1alpha1'
+                    kind = 'YOMBase'
+                    metadata = [ordered]@{
+                        Name = 'resource-one'
+                    }
+                    spec = [ordered]@{}
+                }
+            )
+        }
+
+        $YOMInstance.ApiVersion | Should -Be 'yom.synedgy.com/v1alpha1'
+        $YOMInstance.Kind | Should -Be 'YOMBase'
+        $YOMInstance.Metadata.Name | Should -Be 'resource-one'
+    }
+
+    It 'should dispatch a typed short envelope without wrapping the envelope as spec' {
+        $YOMInstance = InModuleScope @CurrentModule -ScriptBlock {
+            [YOMApiDispatcher]::DispatchSpec(
+                'YOMBase',
+                [ordered]@{
+                    apiVersion = 'yom.synedgy.com/v1alpha1'
+                    metadata = [ordered]@{
+                        Name = 'short-resource'
+                    }
+                    spec = [ordered]@{}
+                }
+            )
+        }
+
+        $YOMInstance.ApiVersion | Should -Be 'yom.synedgy.com/v1alpha1'
+        $YOMInstance.Kind | Should -Be 'YOMBase'
+        $YOMInstance.Metadata.Name | Should -Be 'short-resource'
+    }
+
+    It 'should continue dispatching a legacy raw spec with a default type' {
+        $YOMInstance = InModuleScope @CurrentModule -ScriptBlock {
+            [YOMApiDispatcher]::DispatchSpec(
+                'YOMBase',
+                [ordered]@{
+                    LegacyProperty = 'legacy-value'
+                }
+            )
+        }
+
+        $YOMInstance | Should -Not -BeNullOrEmpty
+        $YOMInstance.Kind | Should -Be 'YOMBase'
+    }
+
+    It 'should default apiVersion when typed short metadata is supplied' {
+        $YOMInstance = InModuleScope @CurrentModule -ScriptBlock {
+            [YOMApiDispatcher]::DispatchSpec(
+                'YOMBase',
+                [ordered]@{
+                    metadata = [ordered]@{
+                        Name = 'metadata-only'
+                    }
+                    spec = [ordered]@{}
+                }
+            )
+        }
+
+        $YOMInstance.ApiVersion | Should -Be ''
+        $YOMInstance.Metadata.Name | Should -Be 'metadata-only'
+    }
+
+    It 'should default metadata when typed short apiVersion is supplied' {
+        $YOMInstance = InModuleScope @CurrentModule -ScriptBlock {
+            [YOMApiDispatcher]::DispatchSpec(
+                'YOMBase',
+                [ordered]@{
+                    apiVersion = 'yom.synedgy.com/v1alpha1'
+                    spec = [ordered]@{}
+                }
+            )
+        }
+
+        $YOMInstance.ApiVersion | Should -Be 'yom.synedgy.com/v1alpha1'
+        $YOMInstance.Metadata.Count | Should -Be 0
+    }
+
+    It 'should reject a definition without spec' {
+        {
+            InModuleScope @CurrentModule -ScriptBlock {
+                [YOMApiDispatcher]::DispatchSpec(
+                    [ordered]@{
+                        kind = 'YOMBase'
+                    }
+                )
+            }
+        } | Should -Throw '*dictionary under the ''spec'' key*'
+    }
+
+    It 'should reject a definition with a non-dictionary spec' {
+        {
+            InModuleScope @CurrentModule -ScriptBlock {
+                [YOMApiDispatcher]::DispatchSpec(
+                    [ordered]@{
+                        kind = 'YOMBase'
+                        spec = 'invalid'
+                    }
+                )
+            }
+        } | Should -Throw '*dictionary under the ''spec'' key*'
+    }
+
+    It 'should reject input that has no kind when no default type is supplied' {
+        {
+            InModuleScope @CurrentModule -ScriptBlock {
+                [YOMApiDispatcher]::DispatchSpec([ordered]@{})
+            }
+        } | Should -Throw '*define it under the ''kind'' key*'
+    }
 }

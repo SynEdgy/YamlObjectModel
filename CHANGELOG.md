@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Pinned the Azure Pipelines GitVersion tool to the compatible 5.x release line.
 - Resolved HQRM violations in the saveable-object example and `Get-YOMObject` helper parameter block.
+- Added the license and project URLs required when packaging the module as a NuGet package.
 
 ## [0.1.4] - 2022-10-26
 
